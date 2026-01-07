@@ -1,0 +1,1588 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Fluxo de Caixa - Eriandson Azevedo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --primary: #2563eb;
+  --primary-dark: #1e40af;
+  --primary-light: #3b82f6;
+  --secondary: #64748b;
+  --success: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --border: #e2e8f0;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  padding: 20px;
+  color: var(--text-primary);
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.header {
+  background: var(--bg-card);
+  padding: 30px;
+  border-radius: 16px;
+  margin-bottom: 30px;
+  box-shadow: var(--shadow-lg);
+}
+
+.header h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header p {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.resumo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.resumo-card {
+  background: var(--bg-card);
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.2s, box-shadow 0.2s;
+  border-left: 4px solid var(--primary);
+}
+
+.resumo-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.resumo-card.entradas { border-left-color: var(--success); }
+.resumo-card.saidas { border-left-color: var(--danger); }
+.resumo-card.inicial { border-left-color: var(--warning); }
+.resumo-card.saldo { border-left-color: var(--primary); }
+.resumo-card.pendentes { border-left-color: var(--secondary); }
+
+.resumo-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.resumo-valor {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: var(--bg-card);
+  padding: 28px;
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+}
+
+.card h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+input, select {
+  width: 100%;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.2s;
+  background: var(--bg-main);
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+button {
+  width: 100%;
+  padding: 12px 20px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+button:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+button.secondary {
+  background: var(--secondary);
+}
+
+button.secondary:hover {
+  background: #475569;
+}
+
+button.success {
+  background: var(--success);
+}
+
+button.success:hover {
+  background: #059669;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 20px 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th {
+  background: var(--bg-main);
+  padding: 14px 12px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--border);
+}
+
+td {
+  padding: 16px 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+tr:hover {
+  background: var(--bg-main);
+}
+
+.badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-block;
+}
+
+.pago {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.pendente {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.tipo-entrada {
+  color: var(--success);
+  font-weight: 600;
+}
+
+.tipo-saida {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.btn {
+  padding: 8px 12px;
+  font-size: 12px;
+  width: auto;
+  margin: 0 4px;
+  display: inline-flex;
+}
+
+.btn-action {
+  background: var(--secondary);
+  padding: 6px 10px;
+  border-radius: 6px;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  margin: 0 2px;
+}
+
+.btn-action:hover {
+  background: #475569;
+}
+
+.filtros {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.resultado-caixa {
+  background: var(--bg-main);
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 20px;
+  border-left: 4px solid var(--primary);
+}
+
+.resultado-caixa strong {
+  color: var(--primary);
+}
+
+.analise-container {
+  margin-top: 20px;
+}
+
+.analise-semana {
+  background: var(--bg-main);
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  border-left: 4px solid var(--primary);
+}
+
+.analise-semana h4 {
+  font-size: 16px;
+  margin-bottom: 12px;
+  color: var(--primary);
+}
+
+.analise-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.analise-item {
+  background: white;
+  padding: 12px;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.analise-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.analise-valor {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.analise-valor.entrada {
+  color: var(--success);
+}
+
+.analise-valor.saida {
+  color: var(--danger);
+}
+
+.analise-valor.pendente {
+  color: var(--warning);
+}
+
+.analise-resumo {
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 16px;
+}
+
+.analise-resumo h4 {
+  font-size: 18px;
+  margin-bottom: 16px;
+}
+
+.analise-resumo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.analise-resumo-item {
+  text-align: center;
+}
+
+.analise-resumo-label {
+  font-size: 12px;
+  opacity: 0.9;
+  margin-bottom: 4px;
+}
+
+.analise-resumo-valor {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.caixa-item {
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  border-left: 4px solid var(--primary);
+}
+
+.caixa-item h5 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.caixa-detalhes {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+}
+
+.caixa-total {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.btn-caixa-pdf {
+  padding: 4px 8px;
+  font-size: 11px;
+  background: var(--secondary);
+  border-radius: 4px;
+  cursor: pointer;
+  border: none;
+  color: white;
+}
+
+.btn-caixa-pdf:hover {
+  background: #475569;
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .resumo {
+    grid-template-columns: 1fr;
+  }
+  
+  .filtros {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<div class="header">
+  <h1>💼 Fluxo de Caixa - Eriandson Azevedo</h1>
+  <p>Gerencie suas finanças de forma inteligente e eficiente</p>
+</div>
+
+<!-- RESUMO -->
+<div class="resumo">
+  <div class="resumo-card entradas">
+    <div class="resumo-label">Entradas</div>
+    <div class="resumo-valor" id="rEntradas">R$ 0,00</div>
+  </div>
+  <div class="resumo-card saidas">
+    <div class="resumo-label">Saídas</div>
+    <div class="resumo-valor" id="rSaidas">R$ 0,00</div>
+  </div>
+  <div class="resumo-card inicial">
+    <div class="resumo-label">Saldo Inicial</div>
+    <div class="resumo-valor" id="rInicial">R$ 0,00</div>
+  </div>
+  <div class="resumo-card saldo">
+    <div class="resumo-label">Saldo Final</div>
+    <div class="resumo-valor" id="rSaldo">R$ 0,00</div>
+  </div>
+  <div class="resumo-card pendentes">
+    <div class="resumo-label">Pendentes</div>
+    <div class="resumo-valor" id="rPendente">R$ 0,00</div>
+  </div>
+</div>
+
+<div class="grid">
+
+<!-- LANÇAMENTO -->
+<div class="card">
+  <h3>📝 Novo Lançamento</h3>
+  <input type="date" id="lData">
+  <input type="text" id="lDesc" placeholder="Descrição">
+  
+  <div style="display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-bottom: 14px;">
+    <select id="lCategoria">
+      <option value="">🏷️ Selecione ou adicione uma categoria...</option>
+    </select>
+    <button onclick="mostrarNovaCategoria()" style="width: auto; padding: 12px 20px; margin: 0;">➕ Nova</button>
+  </div>
+  <div id="novaCategoriaContainer" style="display: none; margin-bottom: 14px;">
+    <input type="text" id="novaCategoriaNome" placeholder="Digite o nome da nova categoria" style="margin-bottom: 8px;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+      <button onclick="adicionarNovaCategoria()" style="margin: 0; background: var(--success);">✓ Adicionar</button>
+      <button onclick="cancelarNovaCategoria()" style="margin: 0; background: var(--secondary);">✗ Cancelar</button>
+    </div>
+  </div>
+  
+  <select id="lTipo">
+    <option value="entrada">💰 Entrada</option>
+    <option value="saida">💸 Saída</option>
+  </select>
+  <input type="number" id="lValor" step="0.01" placeholder="Valor">
+  <button class="success" onclick="addLancamento()">✓ Salvar Lançamento</button>
+
+  <hr>
+  
+  <button class="secondary" onclick="exportarBackup()">📥 Exportar Backup</button>
+  <button class="secondary" onclick="document.getElementById('importFile').click()">📤 Importar Backup</button>
+  <input type="file" id="importFile" hidden onchange="importarBackup(event)">
+  <button class="secondary" onclick="selecionarPastaBackup()">📂 Configurar Backup Automático</button>
+</div>
+
+<!-- CAIXA -->
+<div class="card">
+  <h3>💵 Caixa Diário</h3>
+  <div style="display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-bottom: 14px;">
+    <select id="cNome" onchange="verificarNovoPDV()">
+      <option value="">🏪 Selecione ou adicione um PDV...</option>
+    </select>
+    <button onclick="mostrarNovoPDV()" style="width: auto; padding: 12px 20px; margin: 0;">➕ Novo</button>
+  </div>
+  <div id="novoPDVContainer" style="display: none; margin-bottom: 14px;">
+    <input type="text" id="novoPDVNome" placeholder="Digite o nome do novo PDV" style="margin-bottom: 8px;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+      <button onclick="adicionarNovoPDV()" style="margin: 0; background: var(--success);">✓ Adicionar</button>
+      <button onclick="cancelarNovoPDV()" style="margin: 0; background: var(--secondary);">✗ Cancelar</button>
+    </div>
+  </div>
+  <input type="date" id="cData">
+  <input type="number" id="cDinheiro" placeholder="💵 Dinheiro" step="0.01">
+  <input type="number" id="cPix" placeholder="📱 Pix" step="0.01">
+  <input type="number" id="cCredito" placeholder="💳 Crédito" step="0.01">
+  <input type="number" id="cDebito" placeholder="💳 Débito" step="0.01">
+  <button class="success" onclick="salvarCaixa()">✓ Salvar Caixa</button>
+</div>
+
+</div>
+
+<!-- CONSULTA CAIXA -->
+<div class="card">
+  <h3>🔍 Consulta de Caixa</h3>
+  <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px;">
+    <input type="date" id="consultaCaixaData">
+    <button onclick="consultarCaixa()">🔍 Consultar</button>
+    <button class="secondary" onclick="gerarPdfCompleto()">🖨️ PDF Completo</button>
+  </div>
+  <div id="resultadoCaixa"></div>
+</div>
+
+<!-- FILTROS -->
+<div class="card">
+  <h3>🔎 Filtros e Relatórios</h3>
+  <div class="filtros">
+    <select id="fStatus" onchange="atualizar()">
+      <option value="">📋 Todos os Status</option>
+      <option value="pendente">⏳ Pendentes</option>
+      <option value="pago">✓ Pagos</option>
+    </select>
+    <input type="text" id="fBusca" placeholder="🔍 Buscar descrição..." oninput="atualizar()">
+    <input type="text" id="fCategoria" placeholder="🏷️ Filtrar categoria..." oninput="atualizar()">
+    <input type="month" id="mes" onchange="atualizar()">
+  </div>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+    <div>
+      <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Data Inicial:</label>
+      <input type="date" id="fDataInicio" onchange="atualizar()" style="margin-bottom: 0;">
+    </div>
+    <div>
+      <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Data Final:</label>
+      <input type="date" id="fDataFim" onchange="atualizar()" style="margin-bottom: 0;">
+    </div>
+  </div>
+  <button onclick="limparFiltroData()" style="margin-top: 12px; background: var(--secondary);">🔄 Limpar Filtro de Data</button>
+  <button onclick="pdfMensal()">📄 Gerar Relatório Mensal PDF</button>
+</div>
+
+<!-- ANÁLISE SEMANAL -->
+<div class="card">
+  <h3>📊 Análise Semanal</h3>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+    <div>
+      <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Semana Inicial:</label>
+      <input type="week" id="semanaInicio" onchange="atualizarSemanal()">
+    </div>
+    <div>
+      <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Semana Final:</label>
+      <input type="week" id="semanaFim" onchange="atualizarSemanal()">
+    </div>
+  </div>
+  <button onclick="atualizarSemanal()">🔍 Analisar Período</button>
+  <div id="analiseResultado"></div>
+</div>
+
+<!-- TABELA -->
+<div class="card">
+  <h3>📊 Lançamentos do Período</h3>
+  <div style="overflow-x: auto;">
+    <table>
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Descrição</th>
+          <th>Categoria</th>
+          <th>Tipo</th>
+          <th>Valor</th>
+          <th>Status</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="tabela"></tbody>
+    </table>
+  </div>
+</div>
+
+</div>
+
+<script>
+/* ================== UTIL ================== */
+function moeda(v){
+ if(isNaN(v)||v===null||v===undefined) v=0;
+ return Number(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+}
+
+/* ================== DADOS ================== */
+let lancamentos = JSON.parse(localStorage.getItem('lancamentos')) || [];
+let caixa = JSON.parse(localStorage.getItem('caixa')) || [];
+let pdvs = JSON.parse(localStorage.getItem('pdvs')) || ['PDV 1', 'PDV 2'];
+let categorias = JSON.parse(localStorage.getItem('categorias')) || ['Água', 'Aluguel', 'Fornecedor', 'Impostos', 'Internet', 'Luz', 'Salários', 'Vendas'];
+let caixaSelecionado = null;
+let pastaHandle = null;
+let backupAtivo = false;
+
+/* ================== INIT ================== */
+window.onload = () => {
+ mes.value = new Date().toISOString().slice(0,7);
+ lData.value = new Date().toISOString().slice(0,10);
+ cData.value = new Date().toISOString().slice(0,10);
+ consultaCaixaData.value = new Date().toISOString().slice(0,10);
+ 
+ // Carregar PDVs e Categorias no select
+ carregarPDVs();
+ carregarCategorias();
+ 
+ // Configurar semana atual
+ const hoje = new Date();
+ const ano = hoje.getFullYear();
+ const semana = getWeekNumber(hoje);
+ semanaInicio.value = `${ano}-W${String(semana).padStart(2, '0')}`;
+ semanaFim.value = `${ano}-W${String(semana).padStart(2, '0')}`;
+ 
+ atualizar();
+ atualizarSemanal();
+ backupAutomaticoDiario();
+ 
+ if(localStorage.getItem("backupAtivo")){
+  alert("ℹ️ Selecione novamente a pasta para reativar o backup automático");
+ }
+};
+
+// Função para obter número da semana
+function getWeekNumber(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+
+/* ================== GESTÃO DE PDVs ================== */
+function carregarPDVs() {
+  const select = document.getElementById('cNome');
+  select.innerHTML = '<option value="">🏪 Selecione ou adicione um PDV...</option>';
+  
+  pdvs.forEach(pdv => {
+    const option = document.createElement('option');
+    option.value = pdv;
+    option.textContent = pdv;
+    select.appendChild(option);
+  });
+}
+
+function mostrarNovoPDV() {
+  document.getElementById('novoPDVContainer').style.display = 'block';
+  document.getElementById('novoPDVNome').focus();
+}
+
+function cancelarNovoPDV() {
+  document.getElementById('novoPDVContainer').style.display = 'none';
+  document.getElementById('novoPDVNome').value = '';
+}
+
+function adicionarNovoPDV() {
+  const nome = document.getElementById('novoPDVNome').value.trim();
+  
+  if(!nome) {
+    alert("⚠️ Digite o nome do PDV");
+    return;
+  }
+  
+  if(pdvs.includes(nome)) {
+    alert("⚠️ Este PDV já existe");
+    return;
+  }
+  
+  pdvs.push(nome);
+  localStorage.setItem('pdvs', JSON.stringify(pdvs));
+  
+  carregarPDVs();
+  document.getElementById('cNome').value = nome;
+  cancelarNovoPDV();
+  
+  alert(`✅ PDV "${nome}" adicionado com sucesso!`);
+}
+
+function verificarNovoPDV() {
+  // Apenas para manter compatibilidade, não faz nada
+}
+
+/* ================== GESTÃO DE CATEGORIAS ================== */
+function carregarCategorias() {
+  const select = document.getElementById('lCategoria');
+  select.innerHTML = '<option value="">🏷️ Selecione ou adicione uma categoria...</option>';
+  
+  categorias.sort().forEach(cat => {
+    const option = document.createElement('option');
+    option.value = cat;
+    option.textContent = cat;
+    select.appendChild(option);
+  });
+}
+
+function mostrarNovaCategoria() {
+  document.getElementById('novaCategoriaContainer').style.display = 'block';
+  document.getElementById('novaCategoriaNome').focus();
+}
+
+function cancelarNovaCategoria() {
+  document.getElementById('novaCategoriaContainer').style.display = 'none';
+  document.getElementById('novaCategoriaNome').value = '';
+}
+
+function adicionarNovaCategoria() {
+  const nome = document.getElementById('novaCategoriaNome').value.trim();
+  
+  if(!nome) {
+    alert("⚠️ Digite o nome da categoria");
+    return;
+  }
+  
+  if(categorias.includes(nome)) {
+    alert("⚠️ Esta categoria já existe");
+    return;
+  }
+  
+  categorias.push(nome);
+  localStorage.setItem('categorias', JSON.stringify(categorias));
+  
+  carregarCategorias();
+  document.getElementById('lCategoria').value = nome;
+  cancelarNovaCategoria();
+  
+  alert(`✅ Categoria "${nome}" adicionada com sucesso!`);
+}
+
+/* ================== SALVAR ================== */
+function salvar(){
+ localStorage.setItem('lancamentos',JSON.stringify(lancamentos));
+ localStorage.setItem('caixa',JSON.stringify(caixa));
+ localStorage.setItem('pdvs',JSON.stringify(pdvs));
+ localStorage.setItem('categorias',JSON.stringify(categorias));
+ atualizar();
+ backupAutomatico();
+}
+
+/* ================== LANÇAMENTOS ================== */
+function addLancamento(){
+ if(!lData.value||!lValor.value) return alert("⚠️ Preencha data e valor");
+ 
+ const categoriaSelec = document.getElementById('lCategoria').value;
+ 
+ lancamentos.push({
+  id:Date.now(),
+  data:lData.value,
+  desc:lDesc.value || 'Sem descrição',
+  categoria:categoriaSelec||'',
+  tipo:lTipo.value,
+  valor:Number(lValor.value),
+  status:'pendente'
+ });
+ lDesc.value = '';
+ document.getElementById('lCategoria').value = '';
+ lValor.value = '';
+ salvar();
+ alert("✅ Lançamento adicionado com sucesso!");
+}
+
+function toggle(id){
+ const l=lancamentos.find(x=>x.id===id);
+ l.status=l.status==='pago'?'pendente':'pago';
+ salvar();
+}
+
+function excluir(id){
+ if(confirm("❌ Deseja realmente excluir este lançamento?")){
+  lancamentos=lancamentos.filter(l=>l.id!==id);
+  salvar();
+ }
+}
+
+/* ================== CAIXA ================== */
+function salvarCaixa(){
+ if(!cData.value) return alert("⚠️ Informe a data");
+ 
+ const nomePDV = document.getElementById('cNome').value;
+ if(!nomePDV) return alert("⚠️ Selecione um PDV");
+
+ const r={
+  id: Date.now(),
+  nome: nomePDV,
+  data:cData.value,
+  dinheiro:+cDinheiro.value||0,
+  pix:+cPix.value||0,
+  credito:+cCredito.value||0,
+  debito:+cDebito.value||0
+ };
+ r.total=r.dinheiro+r.pix+r.credito+r.debito;
+
+ caixa.push(r);
+
+ lancamentos.push({
+  id:Date.now()+1,
+  data:r.data,
+  desc:`Vendas - ${r.nome}`,
+  categoria:'Vendas',
+  tipo:'entrada',
+  valor:r.total,
+  status:'pago'
+ });
+
+ document.getElementById('cNome').value = '';
+ cDinheiro.value = '';
+ cPix.value = '';
+ cCredito.value = '';
+ cDebito.value = '';
+
+ salvar();
+ alert("✅ Caixa salvo com sucesso!");
+}
+
+function consultarCaixa(){
+ if(!consultaCaixaData.value) return alert("⚠️ Informe a data");
+ 
+ const caixasDoDia = caixa.filter(c => c.data === consultaCaixaData.value);
+ 
+ if(caixasDoDia.length === 0) {
+   resultadoCaixa.innerHTML = "<div class='resultado-caixa'><strong>⚠️ Nenhum caixa encontrado para esta data</strong></div>";
+   return;
+ }
+
+ let totalGeral = 0;
+ let html = '<div class="resultado-caixa">';
+ html += `<strong style="font-size: 16px; display: block; margin-bottom: 16px;">📅 Caixas de ${new Date(consultaCaixaData.value + 'T00:00:00').toLocaleDateString('pt-BR')}</strong>`;
+ 
+ caixasDoDia.forEach(cx => {
+   totalGeral += cx.total;
+   html += `
+     <div class="caixa-item">
+       <h5>
+         🏪 ${cx.nome}
+         <button class="btn-caixa-pdf" onclick="gerarPdf80mm(${cx.id})">🖨️ PDF</button>
+       </h5>
+       <div class="caixa-detalhes">
+         💵 Dinheiro: ${moeda(cx.dinheiro)}<br>
+         📱 Pix: ${moeda(cx.pix)}<br>
+         💳 Crédito: ${moeda(cx.credito)}<br>
+         💳 Débito: ${moeda(cx.debito)}
+       </div>
+       <div class="caixa-total">💰 Total: ${moeda(cx.total)}</div>
+     </div>
+   `;
+ });
+
+ html += `<div style="background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; padding: 16px; border-radius: 8px; margin-top: 16px; text-align: center;">
+   <div style="font-size: 13px; opacity: 0.9; margin-bottom: 4px;">TOTAL GERAL DO DIA</div>
+   <div style="font-size: 28px; font-weight: 700;">${moeda(totalGeral)}</div>
+   <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">${caixasDoDia.length} caixa(s) registrado(s)</div>
+ </div>`;
+ 
+ html += '</div>';
+ resultadoCaixa.innerHTML = html;
+}
+
+/* ================== FILTROS / RESUMO ================== */
+function atualizar(){
+ let ent=0,sai=0,pend=0;
+ const mesSel=mes.value;
+ const saldoIni=saldoAnterior(mesSel);
+ let lista=lancamentos.filter(l=>l.data.startsWith(mesSel));
+
+ // Filtro por intervalo de datas
+ if(fDataInicio.value && fDataFim.value) {
+   lista = lancamentos.filter(l => l.data >= fDataInicio.value && l.data <= fDataFim.value);
+ } else if(fDataInicio.value) {
+   lista = lancamentos.filter(l => l.data >= fDataInicio.value);
+ } else if(fDataFim.value) {
+   lista = lancamentos.filter(l => l.data <= fDataFim.value);
+ }
+
+ if(fStatus.value) lista=lista.filter(l=>l.status===fStatus.value);
+ if(fCategoria.value) lista=lista.filter(l=>(l.categoria||'').toLowerCase().includes(fCategoria.value.toLowerCase()));
+ if(fBusca.value) lista=lista.filter(l=>l.desc.toLowerCase().includes(fBusca.value.toLowerCase()));
+
+ lista.forEach(l=>{
+  if(l.status==='pago'){
+   l.tipo==='entrada'?ent+=l.valor:sai+=l.valor;
+  }else if(l.tipo==='saida'){
+   pend+=l.valor;
+  }
+ });
+
+ rEntradas.textContent=moeda(ent);
+ rSaidas.textContent=moeda(sai);
+ rInicial.textContent=moeda(saldoIni);
+ rSaldo.textContent=moeda(saldoIni+ent-sai);
+ rPendente.textContent=moeda(pend);
+
+ lista.sort((a,b) => new Date(b.data) - new Date(a.data));
+
+ tabela.innerHTML=lista.map(l=>`
+ <tr>
+ <td>${new Date(l.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+ <td><strong>${l.desc}</strong></td>
+ <td>${l.categoria || '-'}</td>
+ <td class="tipo-${l.tipo}">${l.tipo === 'entrada' ? '↑ Entrada' : '↓ Saída'}</td>
+ <td><strong>${moeda(l.valor)}</strong></td>
+ <td><span class="badge ${l.status}">${l.status === 'pago' ? '✓ Pago' : '⏳ Pendente'}</span></td>
+ <td>
+  <button class="btn-action" onclick="toggle(${l.id})" title="Alterar status">✓</button>
+  <button class="btn-action" onclick="excluir(${l.id})" title="Excluir">🗑️</button>
+ </td>
+ </tr>`).join('');
+}
+
+function limparFiltroData() {
+  fDataInicio.value = '';
+  fDataFim.value = '';
+  atualizar();
+}
+
+function saldoAnterior(m){
+ const d=new Date(m+'-01');
+ d.setMonth(d.getMonth()-1);
+ const ref=d.toISOString().slice(0,7);
+ let s=0;
+ lancamentos.forEach(l=>{
+  if(l.data.startsWith(ref)&&l.status==='pago'){
+   s+=l.tipo==='entrada'?l.valor:-l.valor;
+  }
+ });
+ return s;
+}
+
+/* ================== BACKUP ================== */
+async function selecionarPastaBackup(){
+ if(!window.showDirectoryPicker){
+  alert("⚠️ Use Chrome ou Edge para esta funcionalidade");
+  return;
+ }
+
+ pastaHandle = await showDirectoryPicker();
+ backupAtivo = true;
+ localStorage.setItem("backupAtivo", "1");
+ alert("✅ Backup automático ativado para esta sessão!");
+}
+
+async function backupAutomatico(){
+ if(!backupAtivo || !pastaHandle) return;
+
+ try{
+  const hoje = new Date().toISOString().slice(0,10);
+  const nome = `backup-fluxo-caixa-${hoje}.json`;
+
+  const dados = JSON.stringify({lancamentos, caixa, pdvs, categorias}, null, 2);
+
+  const fileHandle = await pastaHandle.getFileHandle(nome, { create: true });
+  const writable = await fileHandle.createWritable();
+  await writable.write(dados);
+  await writable.close();
+
+  console.log("✓ Backup automático salvo:", nome);
+
+ }catch(e){
+  console.warn("Backup automático bloqueado:", e);
+ }
+}
+
+async function exportarBackup(){
+ const dados=JSON.stringify({lancamentos,caixa,pdvs,categorias},null,2);
+
+ if(!pastaHandle){
+  const blob=new Blob([dados],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='backup-fluxo-caixa.json';
+  a.click();
+  alert("✅ Backup exportado com sucesso!");
+  return;
+ }
+
+ const nome=`backup-fluxo-caixa-${new Date().toISOString().slice(0,10)}.json`;
+ const fileHandle=await pastaHandle.getFileHandle(nome,{create:true});
+ const writable=await fileHandle.createWritable();
+ await writable.write(dados);
+ await writable.close();
+ alert("✅ Backup salvo na pasta configurada!");
+}
+
+async function backupAutomaticoDiario(){
+ if(!pastaHandle) return;
+ const hoje=new Date().toISOString().slice(0,10);
+ if(localStorage.getItem('ultimoBackupDiario')===hoje) return;
+
+ try{
+  const dados=JSON.stringify({lancamentos,caixa,pdvs,categorias},null,2);
+  const nome=`backup-fluxo-caixa-${hoje}.json`;
+  const fileHandle=await pastaHandle.getFileHandle(nome,{create:true});
+  const writable=await fileHandle.createWritable();
+  await writable.write(dados);
+  await writable.close();
+  localStorage.setItem('ultimoBackupDiario',hoje);
+ }catch(e){}
+}
+
+function importarBackup(event){
+ const file = event.target.files[0];
+ if(!file) return alert("⚠️ Nenhum arquivo selecionado");
+
+ const reader = new FileReader();
+
+ reader.onload = () => {
+  try{
+   const data = JSON.parse(reader.result);
+
+   if(!data.lancamentos || !data.caixa){
+    alert("⚠️ Arquivo inválido. Estrutura de backup não reconhecida.");
+    return;
+   }
+
+   lancamentos = Array.isArray(data.lancamentos) ? data.lancamentos : [];
+   caixa = Array.isArray(data.caixa) ? data.caixa : [];
+   pdvs = Array.isArray(data.pdvs) ? data.pdvs : ['PDV 1', 'PDV 2'];
+   categorias = Array.isArray(data.categorias) ? data.categorias : ['Água', 'Aluguel', 'Fornecedor', 'Impostos', 'Internet', 'Luz', 'Salários', 'Vendas'];
+
+   salvar();
+   carregarPDVs();
+   carregarCategorias();
+
+   alert(
+    "✅ Backup importado com sucesso!\n\n" +
+    `📝 Lançamentos: ${lancamentos.length}\n` +
+    `💰 Caixas: ${caixa.length}\n` +
+    `🏪 PDVs: ${pdvs.length}\n` +
+    `🏷️ Categorias: ${categorias.length}`
+   );
+
+  }catch(err){
+   console.error(err);
+   alert("❌ Erro ao importar backup. Arquivo corrompido ou inválido.");
+  }
+ };
+
+ reader.readAsText(file);
+ event.target.value = "";
+}
+
+/* ================== PDF ================== */
+function gerarPdf80mm(idCaixa){
+ const cx = caixa.find(c => c.id === idCaixa);
+ if(!cx) return alert("⚠️ Caixa não encontrado");
+ 
+ const {jsPDF}=window.jspdf;
+ const pdf=new jsPDF({unit:'mm',format:[80,200]});
+ let y=10;
+ 
+ pdf.setFontSize(14);
+ pdf.text("FECHAMENTO DE CAIXA",40,y,{align:'center'});
+ y+=8;
+ 
+ pdf.setFontSize(10);
+ pdf.text(cx.nome,40,y,{align:'center'});
+ y+=8;
+ 
+ pdf.setFontSize(9);
+ pdf.text(`Data: ${new Date(cx.data + 'T00:00:00').toLocaleDateString('pt-BR')}`,5,y);
+ y+=8;
+ 
+ pdf.text(`Dinheiro: ${moeda(cx.dinheiro)}`,5,y);y+=6;
+ pdf.text(`Pix: ${moeda(cx.pix)}`,5,y);y+=6;
+ pdf.text(`Credito: ${moeda(cx.credito)}`,5,y);y+=6;
+ pdf.text(`Debito: ${moeda(cx.debito)}`,5,y);y+=8;
+ 
+ pdf.setFontSize(11);
+ pdf.text(`TOTAL: ${moeda(cx.total)}`,5,y);
+ 
+ pdf.save(`caixa-${cx.nome.replace(/\s+/g, '-')}-${cx.data}.pdf`);
+}
+
+function gerarPdfCompleto(){
+ if(!consultaCaixaData.value) return alert("⚠️ Consulte uma data primeiro");
+ 
+ const caixasDoDia = caixa.filter(c => c.data === consultaCaixaData.value);
+ 
+ if(caixasDoDia.length === 0) {
+   return alert("⚠️ Nenhum caixa encontrado para gerar PDF");
+ }
+
+ const {jsPDF}=window.jspdf;
+ const pdf=new jsPDF();
+ let y=15;
+ 
+ // Título
+ pdf.setFontSize(18);
+ pdf.text("RELATORIO DE CAIXA - CONSOLIDADO",105,y,{align:'center'});
+ y+=10;
+ 
+ pdf.setFontSize(12);
+ pdf.text(`Data: ${new Date(consultaCaixaData.value + 'T00:00:00').toLocaleDateString('pt-BR')}`,105,y,{align:'center'});
+ y+=15;
+
+ // Variáveis para totalização
+ let totalDinheiro = 0, totalPix = 0, totalCredito = 0, totalDebito = 0, totalGeral = 0;
+
+ // Detalhamento por PDV
+ caixasDoDia.forEach((cx, index) => {
+   pdf.setFontSize(14);
+   pdf.setFont(undefined, 'bold');
+   pdf.text(`${index + 1}. ${cx.nome}`,15,y);
+   y+=8;
+   
+   pdf.setFontSize(11);
+   pdf.setFont(undefined, 'normal');
+   pdf.text(`Dinheiro: ${moeda(cx.dinheiro)}`,20,y);y+=6;
+   pdf.text(`Pix: ${moeda(cx.pix)}`,20,y);y+=6;
+   pdf.text(`Credito: ${moeda(cx.credito)}`,20,y);y+=6;
+   pdf.text(`Debito: ${moeda(cx.debito)}`,20,y);y+=8;
+   
+   pdf.setFont(undefined, 'bold');
+   pdf.text(`Subtotal: ${moeda(cx.total)}`,20,y);
+   y+=12;
+
+   // Acumular totais
+   totalDinheiro += cx.dinheiro;
+   totalPix += cx.pix;
+   totalCredito += cx.credito;
+   totalDebito += cx.debito;
+   totalGeral += cx.total;
+
+   // Nova página se necessário
+   if(y > 250 && index < caixasDoDia.length - 1) {
+     pdf.addPage();
+     y = 15;
+   }
+ });
+
+ // Linha separadora
+ y+=5;
+ pdf.setDrawColor(0);
+ pdf.setLineWidth(0.5);
+ pdf.line(15, y, 195, y);
+ y+=10;
+
+ // Totais gerais
+ pdf.setFontSize(14);
+ pdf.setFont(undefined, 'bold');
+ pdf.text('TOTAIS GERAIS',15,y);
+ y+=10;
+
+ pdf.setFontSize(12);
+ pdf.text(`Total Dinheiro: ${moeda(totalDinheiro)}`,20,y);y+=7;
+ pdf.text(`Total Pix: ${moeda(totalPix)}`,20,y);y+=7;
+ pdf.text(`Total Credito: ${moeda(totalCredito)}`,20,y);y+=7;
+ pdf.text(`Total Debito: ${moeda(totalDebito)}`,20,y);y+=10;
+
+ // Total geral destacado
+ pdf.setFillColor(37, 99, 235);
+ pdf.rect(15, y-6, 180, 12, 'F');
+ pdf.setTextColor(255, 255, 255);
+ pdf.setFontSize(16);
+ pdf.text(`TOTAL GERAL: ${moeda(totalGeral)}`,105,y,{align:'center'});
+ pdf.setTextColor(0, 0, 0);
+ y+=15;
+
+ // Informações adicionais
+ pdf.setFontSize(10);
+ pdf.setFont(undefined, 'normal');
+ pdf.text(`Total de PDVs/Caixas: ${caixasDoDia.length}`,20,y);
+ 
+ pdf.save(`relatorio-caixa-completo-${consultaCaixaData.value}.pdf`);
+}
+
+function pdfMensal(){
+ const {jsPDF}=window.jspdf;
+ const pdf=new jsPDF();
+ const [a,m]=mes.value.split('-');
+ const nomeMes=new Date(a,m-1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+ 
+ let y=15;
+ 
+ // Cabeçalho
+ pdf.setFontSize(18);
+ pdf.setFont(undefined, 'bold');
+ pdf.text("RELATÓRIO MENSAL - FLUXO DE CAIXA",105,y,{align:'center'});
+ y+=10;
+ 
+ pdf.setFontSize(12);
+ pdf.setFont(undefined, 'normal');
+ pdf.text(`Periodo: ${nomeMes}`,105,y,{align:'center'});
+ y+=15;
+
+ // Resumo Financeiro
+ pdf.setFontSize(14);
+ pdf.setFont(undefined, 'bold');
+ pdf.text("RESUMO FINANCEIRO",15,y);
+ y+=10;
+
+ pdf.setFontSize(11);
+ pdf.setFont(undefined, 'normal');
+ pdf.text(`Saldo Inicial: ${rInicial.textContent}`,20,y);y+=7;
+ pdf.text(`Entradas: ${rEntradas.textContent}`,20,y);y+=7;
+ pdf.text(`Saidas: ${rSaidas.textContent}`,20,y);y+=7;
+ pdf.text(`Pendentes: ${rPendente.textContent}`,20,y);y+=10;
+ 
+ pdf.setFontSize(13);
+ pdf.setFont(undefined, 'bold');
+ pdf.text(`Saldo Final: ${rSaldo.textContent}`,20,y);
+ y+=15;
+
+ // Filtrar lançamentos do mês
+ const mesSel = mes.value;
+ let lancamentosMes = lancamentos.filter(l => l.data.startsWith(mesSel));
+ 
+ // Ordenar por data (crescente) e depois por tipo
+ lancamentosMes.sort((a,b) => {
+   if(a.data !== b.data) {
+     return a.data.localeCompare(b.data);
+   }
+   // Entradas primeiro, depois saídas
+   if(a.tipo !== b.tipo) {
+     return a.tipo === 'entrada' ? -1 : 1;
+   }
+   return 0;
+ });
+
+ if(lancamentosMes.length === 0) {
+   pdf.setFontSize(11);
+   pdf.text("Nenhum lançamento registrado neste periodo.",15,y);
+ } else {
+   // Título da tabela
+   pdf.setFontSize(14);
+   pdf.setFont(undefined, 'bold');
+   pdf.text("LANÇAMENTOS DO PERÍODO",15,y);
+   y+=10;
+
+   // Cabeçalho da tabela
+   pdf.setFontSize(9);
+   pdf.setFont(undefined, 'bold');
+   pdf.text("Data",15,y);
+   pdf.text("Descricao",35,y);
+   pdf.text("Categoria",95,y);
+   pdf.text("Tipo",130,y);
+   pdf.text("Valor",160,y);
+   pdf.text("Status",185,y);
+   y+=5;
+   
+   // Linha do cabeçalho
+   pdf.setDrawColor(200);
+   pdf.setLineWidth(0.3);
+   pdf.line(15, y, 195, y);
+   y+=5;
+
+   // Dados da tabela
+   pdf.setFont(undefined, 'normal');
+   
+   lancamentosMes.forEach((l, index) => {
+     // Verificar se precisa de nova página
+     if(y > 270) {
+       pdf.addPage();
+       y = 15;
+       
+       // Repetir cabeçalho
+       pdf.setFontSize(9);
+       pdf.setFont(undefined, 'bold');
+       pdf.text("Data",15,y);
+       pdf.text("Descricao",35,y);
+       pdf.text("Categoria",95,y);
+       pdf.text("Tipo",130,y);
+       pdf.text("Valor",160,y);
+       pdf.text("Status",185,y);
+       y+=5;
+       pdf.line(15, y, 195, y);
+       y+=5;
+       pdf.setFont(undefined, 'normal');
+     }
+
+     // Truncar texto longo - proteção contra valores null/undefined
+     const descricao = l.desc || 'Sem descricao';
+     const descTrunc = descricao.length > 25 ? descricao.substring(0, 25) + '...' : descricao;
+     
+     const categoria = l.categoria || '-';
+     const catTrunc = categoria.length > 15 ? categoria.substring(0, 15) + '...' : categoria;
+
+     pdf.setFontSize(8);
+     pdf.text(new Date(l.data + 'T00:00:00').toLocaleDateString('pt-BR'),15,y);
+     pdf.text(descTrunc,35,y);
+     pdf.text(catTrunc,95,y);
+     
+     // Cor por tipo
+     if(l.tipo === 'entrada') {
+       pdf.setTextColor(16, 185, 129); // verde
+       pdf.text("Entrada",130,y);
+     } else {
+       pdf.setTextColor(239, 68, 68); // vermelho
+       pdf.text("Saida",130,y);
+     }
+     
+     pdf.setTextColor(0, 0, 0); // volta ao preto
+     pdf.text(moeda(l.valor),160,y);
+     
+     // Status
+     if(l.status === 'pago') {
+       pdf.setTextColor(6, 95, 70);
+       pdf.text("Pago",185,y);
+     } else {
+       pdf.setTextColor(153, 27, 27);
+       pdf.text("Pendente",185,y);
+     }
+     
+     pdf.setTextColor(0, 0, 0);
+     y+=6;
+
+     // Linha separadora mais sutil
+     if(index < lancamentosMes.length - 1) {
+       pdf.setDrawColor(240);
+       pdf.setLineWidth(0.1);
+       pdf.line(15, y-1, 195, y-1);
+     }
+   });
+
+   // Totalizadores no final
+   y+=10;
+   if(y > 260) {
+     pdf.addPage();
+     y = 20;
+   }
+
+   pdf.setDrawColor(0);
+   pdf.setLineWidth(0.5);
+   pdf.line(15, y, 195, y);
+   y+=8;
+
+   pdf.setFontSize(11);
+   pdf.setFont(undefined, 'bold');
+   pdf.text("TOTALIZAÇÃO",15,y);
+   y+=8;
+
+   let totalEntradas = 0, totalSaidas = 0;
+   lancamentosMes.forEach(l => {
+     if(l.status === 'pago') {
+       if(l.tipo === 'entrada') totalEntradas += l.valor;
+       else totalSaidas += l.valor;
+     }
+   });
+
+   pdf.setFontSize(10);
+   pdf.setFont(undefined, 'normal');
+   pdf.setTextColor(16, 185, 129);
+   pdf.text(`Total de Entradas Pagas: ${moeda(totalEntradas)}`,20,y);
+   y+=7;
+   pdf.setTextColor(239, 68, 68);
+   pdf.text(`Total de Saidas Pagas: ${moeda(totalSaidas)}`,20,y);
+   y+=7;
+   pdf.setTextColor(0, 0, 0);
+   pdf.setFont(undefined, 'bold');
+   pdf.text(`Saldo do Periodo: ${moeda(totalEntradas - totalSaidas)}`,20,y);
+ }
+
+ // Rodapé
+ const totalPaginas = pdf.internal.getNumberOfPages();
+ for(let i = 1; i <= totalPaginas; i++) {
+   pdf.setPage(i);
+   pdf.setFontSize(8);
+   pdf.setFont(undefined, 'normal');
+   pdf.setTextColor(150);
+   pdf.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`,15,287);
+   pdf.text(`Pagina ${i} de ${totalPaginas}`,185,287);
+   pdf.setTextColor(0);
+ }
+
+ pdf.save(`relatorio-mensal-${mes.value}.pdf`);
+}
+
+/* ================== ANÁLISE SEMANAL ================== */
+function atualizarSemanal() {
+  if(!semanaInicio.value || !semanaFim.value) {
+    analiseResultado.innerHTML = '<div class="resultado-caixa"><strong>⚠️ Selecione as semanas para análise</strong></div>';
+    return;
+  }
+
+  const semanasAnalise = getSemanasIntervalo(semanaInicio.value, semanaFim.value);
+  
+  if(semanasAnalise.length === 0) {
+    analiseResultado.innerHTML = '<div class="resultado-caixa"><strong>⚠️ Intervalo de semanas inválido</strong></div>';
+    return;
+  }
+
+  let html = '<div class="analise-container">';
+  let totalGeralPago = 0, totalGeralPendente = 0;
+  let totalEntradasPago = 0, totalSaidasPago = 0;
+  let totalEntradasPendente = 0, totalSaidasPendente = 0;
+
+  semanasAnalise.forEach(semana => {
+    const dados = analisarSemana(semana.inicio, semana.fim);
+    
+    totalGeralPago += dados.pagoEntradas - dados.pagoSaidas;
+    totalGeralPendente += dados.pendenteTotal;
+    totalEntradasPago += dados.pagoEntradas;
+    totalSaidasPago += dados.pagoSaidas;
+    totalEntradasPendente += dados.pendenteEntradas;
+    totalSaidasPendente += dados.pendenteSaidas;
+
+    html += `
+      <div class="analise-semana">
+        <h4>📅 Semana de ${new Date(semana.inicio).toLocaleDateString('pt-BR')} a ${new Date(semana.fim).toLocaleDateString('pt-BR')}</h4>
+        
+        <div style="margin-top: 12px;">
+          <strong style="color: var(--success);">✓ Lançamentos Pagos</strong>
+          <div class="analise-grid">
+            <div class="analise-item">
+              <div class="analise-label">Entradas</div>
+              <div class="analise-valor entrada">${moeda(dados.pagoEntradas)}</div>
+            </div>
+            <div class="analise-item">
+              <div class="analise-label">Saídas</div>
+              <div class="analise-valor saida">${moeda(dados.pagoSaidas)}</div>
+            </div>
+            <div class="analise-item">
+              <div class="analise-label">Saldo</div>
+              <div class="analise-valor" style="color: ${dados.pagoEntradas - dados.pagoSaidas >= 0 ? 'var(--success)' : 'var(--danger)'}">${moeda(dados.pagoEntradas - dados.pagoSaidas)}</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 16px;">
+          <strong style="color: var(--warning);">⏳ Lançamentos Pendentes</strong>
+          <div class="analise-grid">
+            <div class="analise-item">
+              <div class="analise-label">Entradas</div>
+              <div class="analise-valor pendente">${moeda(dados.pendenteEntradas)}</div>
+            </div>
+            <div class="analise-item">
+              <div class="analise-label">Saídas</div>
+              <div class="analise-valor pendente">${moeda(dados.pendenteSaidas)}</div>
+            </div>
+            <div class="analise-item">
+              <div class="analise-label">Total</div>
+              <div class="analise-valor pendente">${moeda(dados.pendenteTotal)}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  // Resumo geral do período
+  if(semanasAnalise.length > 1) {
+    html += `
+      <div class="analise-resumo">
+        <h4>📊 Resumo Geral do Período</h4>
+        <div class="analise-resumo-grid">
+          <div class="analise-resumo-item">
+            <div class="analise-resumo-label">Entradas Pagas</div>
+            <div class="analise-resumo-valor">${moeda(totalEntradasPago)}</div>
+          </div>
+          <div class="analise-resumo-item">
+            <div class="analise-resumo-label">Saídas Pagas</div>
+            <div class="analise-resumo-valor">${moeda(totalSaidasPago)}</div>
+          </div>
+          <div class="analise-resumo-item">
+            <div class="analise-resumo-label">Saldo Realizado</div>
+            <div class="analise-resumo-valor">${moeda(totalGeralPago)}</div>
+          </div>
+          <div class="analise-resumo-item">
+            <div class="analise-resumo-label">Total Pendente</div>
+            <div class="analise-resumo-valor">${moeda(totalGeralPendente)}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  html += '</div>';
+  analiseResultado.innerHTML = html;
+}
+
+function analisarSemana(dataInicio, dataFim) {
+  const lancamentosSemana = lancamentos.filter(l => 
+    l.data >= dataInicio && l.data <= dataFim
+  );
+
+  let pagoEntradas = 0, pagoSaidas = 0;
+  let pendenteEntradas = 0, pendenteSaidas = 0;
+
+  lancamentosSemana.forEach(l => {
+    if(l.status === 'pago') {
+      if(l.tipo === 'entrada') {
+        pagoEntradas += l.valor;
+      } else {
+        pagoSaidas += l.valor;
+      }
+    } else {
+      if(l.tipo === 'entrada') {
+        pendenteEntradas += l.valor;
+      } else {
+        pendenteSaidas += l.valor;
+      }
+    }
+  });
+
+  return {
+    pagoEntradas,
+    pagoSaidas,
+    pendenteEntradas,
+    pendenteSaidas,
+    pendenteTotal: pendenteSaidas - pendenteEntradas
+  };
+}
+
+function getSemanasIntervalo(semanaInicio, semanaFim) {
+  const [anoIni, semIni] = semanaInicio.split('-W').map(Number);
+  const [anoFim, semFim] = semanaFim.split('-W').map(Number);
+  
+  const semanas = [];
+  
+  for(let ano = anoIni; ano <= anoFim; ano++) {
+    const primeiraSemana = (ano === anoIni) ? semIni : 1;
+    const ultimaSemana = (ano === anoFim) ? semFim : 52;
+    
+    for(let sem = primeiraSemana; sem <= ultimaSemana; sem++) {
+      const datas = getDatasSemana(ano, sem);
+      semanas.push(datas);
+    }
+  }
+  
+  return semanas;
+}
+
+function getDatasSemana(ano, semana) {
+  const dataRef = new Date(ano, 0, 1 + (semana - 1) * 7);
+  const dia = dataRef.getDay();
+  const diff = dataRef.getDate() - dia + (dia === 0 ? -6 : 1);
+  
+  const segunda = new Date(dataRef.setDate(diff));
+  const domingo = new Date(segunda);
+  domingo.setDate(segunda.getDate() + 6);
+  
+  return {
+    inicio: segunda.toISOString().slice(0, 10),
+    fim: domingo.toISOString().slice(0, 10)
+  };
+}
+</script>
+
+</body>
+</html>

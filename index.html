@@ -491,7 +491,8 @@ tr:hover {
 
 <!-- LANÇAMENTO -->
 <div class="card">
-  <h3>📝 Novo Lançamento</h3>
+  <h3 id="tituloLancamento">📝 Novo Lançamento</h3>
+  <input type="hidden" id="lId" value="">
   <input type="date" id="lData">
   <input type="text" id="lDesc" placeholder="Descrição">
   
@@ -514,7 +515,12 @@ tr:hover {
     <option value="saida">💸 Saída</option>
   </select>
   <input type="number" id="lValor" step="0.01" placeholder="Valor">
-  <button class="success" onclick="addLancamento()">✓ Salvar Lançamento</button>
+  <select id="lStatus">
+    <option value="pendente">⏳ Pendente</option>
+    <option value="pago">✓ Pago</option>
+  </select>
+  <button class="success" onclick="salvarLancamento()" id="btnSalvarLancamento">✓ Salvar Lançamento</button>
+  <button class="secondary" onclick="cancelarEdicao()" id="btnCancelarEdicao" style="display: none;">✗ Cancelar Edição</button>
 
   <hr>
   
@@ -787,25 +793,78 @@ function salvar(){
 }
 
 /* ================== LANÇAMENTOS ================== */
-function addLancamento(){
+function salvarLancamento(){
  if(!lData.value||!lValor.value) return alert("⚠️ Preencha data e valor");
  
  const categoriaSelec = document.getElementById('lCategoria').value;
+ const idEdicao = document.getElementById('lId').value;
  
- lancamentos.push({
-  id:Date.now(),
-  data:lData.value,
-  desc:lDesc.value || 'Sem descrição',
-  categoria:categoriaSelec||'',
-  tipo:lTipo.value,
-  valor:Number(lValor.value),
-  status:'pendente'
- });
+ if(idEdicao) {
+   // Modo edição - atualizar lançamento existente
+   const lancamento = lancamentos.find(l => l.id == idEdicao);
+   if(lancamento) {
+     lancamento.data = lData.value;
+     lancamento.desc = lDesc.value || 'Sem descrição';
+     lancamento.categoria = categoriaSelec || '';
+     lancamento.tipo = lTipo.value;
+     lancamento.valor = Number(lValor.value);
+     lancamento.status = lStatus.value;
+     alert("✅ Lançamento atualizado com sucesso!");
+   }
+ } else {
+   // Modo novo - criar lançamento
+   lancamentos.push({
+     id: Date.now(),
+     data: lData.value,
+     desc: lDesc.value || 'Sem descrição',
+     categoria: categoriaSelec || '',
+     tipo: lTipo.value,
+     valor: Number(lValor.value),
+     status: lStatus.value
+   });
+   alert("✅ Lançamento adicionado com sucesso!");
+ }
+ 
+ limparFormularioLancamento();
+ salvar();
+}
+
+function editarLancamento(id){
+ const lancamento = lancamentos.find(l => l.id === id);
+ if(!lancamento) return alert("⚠️ Lançamento não encontrado");
+ 
+ // Preencher formulário
+ document.getElementById('lId').value = lancamento.id;
+ lData.value = lancamento.data;
+ lDesc.value = lancamento.desc;
+ document.getElementById('lCategoria').value = lancamento.categoria || '';
+ lTipo.value = lancamento.tipo;
+ lValor.value = lancamento.valor;
+ lStatus.value = lancamento.status;
+ 
+ // Mudar título e botões
+ document.getElementById('tituloLancamento').textContent = '✏️ Editar Lançamento';
+ document.getElementById('btnSalvarLancamento').textContent = '✓ Atualizar Lançamento';
+ document.getElementById('btnCancelarEdicao').style.display = 'block';
+ 
+ // Scroll para o formulário
+ document.getElementById('tituloLancamento').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function cancelarEdicao(){
+ limparFormularioLancamento();
+}
+
+function limparFormularioLancamento(){
+ document.getElementById('lId').value = '';
  lDesc.value = '';
  document.getElementById('lCategoria').value = '';
  lValor.value = '';
- salvar();
- alert("✅ Lançamento adicionado com sucesso!");
+ lStatus.value = 'pendente';
+ 
+ document.getElementById('tituloLancamento').textContent = '📝 Novo Lançamento';
+ document.getElementById('btnSalvarLancamento').textContent = '✓ Salvar Lançamento';
+ document.getElementById('btnCancelarEdicao').style.display = 'none';
 }
 
 function toggle(id){
@@ -861,6 +920,33 @@ function salvarCaixa(){
  alert("✅ Caixa salvo com sucesso!");
 }
 
+function excluirCaixa(idCaixa){
+ if(!confirm("❌ Deseja realmente excluir este caixa?\n\nAtenção: O lançamento de vendas associado também será removido.")) {
+   return;
+ }
+ 
+ const caixaParaExcluir = caixa.find(c => c.id === idCaixa);
+ if(!caixaParaExcluir) {
+   alert("⚠️ Caixa não encontrado");
+   return;
+ }
+ 
+ // Remover o caixa
+ caixa = caixa.filter(c => c.id !== idCaixa);
+ 
+ // Remover o lançamento de vendas associado
+ // Procurar lançamento com a mesma data, categoria "Vendas" e descrição correspondente
+ lancamentos = lancamentos.filter(l => {
+   const mesmaData = l.data === caixaParaExcluir.data;
+   const ehVenda = l.categoria === 'Vendas' && l.desc.includes(caixaParaExcluir.nome);
+   return !(mesmaData && ehVenda);
+ });
+ 
+ salvar();
+ consultarCaixa(); // Atualizar a visualização
+ alert("✅ Caixa excluído com sucesso!");
+}
+
 function consultarCaixa(){
  if(!consultaCaixaData.value) return alert("⚠️ Informe a data");
  
@@ -881,7 +967,10 @@ function consultarCaixa(){
      <div class="caixa-item">
        <h5>
          🏪 ${cx.nome}
-         <button class="btn-caixa-pdf" onclick="gerarPdf80mm(${cx.id})">🖨️ PDF</button>
+         <div>
+           <button class="btn-caixa-pdf" onclick="gerarPdf80mm(${cx.id})" style="margin-right: 4px;">🖨️ PDF</button>
+           <button class="btn-caixa-pdf" onclick="excluirCaixa(${cx.id})" style="background: var(--danger);">🗑️</button>
+         </div>
        </h5>
        <div class="caixa-detalhes">
          💵 Dinheiro: ${moeda(cx.dinheiro)}<br>
@@ -949,8 +1038,9 @@ function atualizar(){
  <td><strong>${moeda(l.valor)}</strong></td>
  <td><span class="badge ${l.status}">${l.status === 'pago' ? '✓ Pago' : '⏳ Pendente'}</span></td>
  <td>
-  <button class="btn-action" onclick="toggle(${l.id})" title="Alterar status">✓</button>
-  <button class="btn-action" onclick="excluir(${l.id})" title="Excluir">🗑️</button>
+  <button class="btn-action" onclick="toggle(${l.id})" title="Alterar status" style="background: #87CEEB">✓</button>
+  <button class="btn-action" onclick="editarLancamento(${l.id})" title="Editar" style="background: #ffa940">✏️</button>
+  <button class="btn-action" onclick="excluir(${l.id})" title="Excluir" style="background: #a19d9d">🗑️</button>
  </td>
  </tr>`).join('');
 }
@@ -1062,8 +1152,8 @@ function importarBackup(event){
 
    lancamentos = Array.isArray(data.lancamentos) ? data.lancamentos : [];
    caixa = Array.isArray(data.caixa) ? data.caixa : [];
-   pdvs = Array.isArray(data.pdvs) ? data.pdvs : ['PDV 1', 'PDV 2'];
-   categorias = Array.isArray(data.categorias) ? data.categorias : ['Água', 'Aluguel', 'Fornecedor', 'Impostos', 'Internet', 'Luz', 'Salários', 'Vendas'];
+   pdvs = Array.isArray(data.pdvs) ? data.pdvs : ['PDV 1', 'PDV 2', 'PDV 3'];
+   categorias = Array.isArray(data.categorias) ? data.categorias : ['Aluguel', 'Fornecedor', 'Vendas', 'Salários', 'Água', 'Luz', 'Internet'];
 
    salvar();
    carregarPDVs();
@@ -1223,7 +1313,7 @@ function pdfMensal(){
  // Cabeçalho
  pdf.setFontSize(18);
  pdf.setFont(undefined, 'bold');
- pdf.text("RELATÓRIO MENSAL - FLUXO DE CAIXA",105,y,{align:'center'});
+ pdf.text("RELATORIO MENSAL - FLUXO DE CAIXA",105,y,{align:'center'});
  y+=10;
  
  pdf.setFontSize(12);
@@ -1267,12 +1357,12 @@ function pdfMensal(){
 
  if(lancamentosMes.length === 0) {
    pdf.setFontSize(11);
-   pdf.text("Nenhum lançamento registrado neste periodo.",15,y);
+   pdf.text("Nenhum lancamento registrado neste periodo.",15,y);
  } else {
    // Título da tabela
    pdf.setFontSize(14);
    pdf.setFont(undefined, 'bold');
-   pdf.text("LANÇAMENTOS DO PERÍODO",15,y);
+   pdf.text("LANCAMENTOS DO PERIODO",15,y);
    y+=10;
 
    // Cabeçalho da tabela
@@ -1374,7 +1464,7 @@ function pdfMensal(){
 
    pdf.setFontSize(11);
    pdf.setFont(undefined, 'bold');
-   pdf.text("TOTALIZAÇÃO",15,y);
+   pdf.text("TOTALIZACAO",15,y);
    y+=8;
 
    let totalEntradas = 0, totalSaidas = 0;
